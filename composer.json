@@ -1,0 +1,35 @@
+{
+    "name": "pagelyne/media",
+    "version": "1.0.0",
+    "description": "Pagelyne Media Laravel Plugin",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4"
+    },
+    "require-dev": {
+        "laravel/framework": "^13.32"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pagelyne\\Media\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pagelyne\\Media\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Pagelyne\\Media\\Providers\\MediaServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
