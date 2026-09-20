@@ -19,7 +19,7 @@ return [
     'routes' => [
         'enabled' => true,
         'prefix' => 'media',
-        'middleware' => ['web', 'auth'],
+        // 'middleware' => ['web', 'auth'],
     ],
 
     /*
