@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Pagelyne\Media\Providers;
 
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Pagelyne\Media\Contracts\MediaRepositoryInterface;
+use Pagelyne\Media\Contracts\MediaStorageInterface;
+use Pagelyne\Media\Repositories\MediaRepository;
 use Pagelyne\Media\Services\MediaService;
+use Pagelyne\Media\Services\MediaUploadService;
+use Pagelyne\Media\Storage\LocalMediaStorage;
 
 class MediaServiceProvider extends ServiceProvider
 {
@@ -16,15 +21,27 @@ class MediaServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../Config/media.php',
+            __DIR__ . '/../../config/media.php',
             'media'
         );
 
-        $this->app->singleton(MediaService::class, function ($app) {
-            return new MediaService(
-                config('media')
-            );
-        });
+        $this->app->bind(
+            MediaRepositoryInterface::class,
+            MediaRepository::class
+        );
+
+        $this->app->bind(
+            MediaStorageInterface::class,
+            LocalMediaStorage::class
+        );
+
+        $this->app->singleton(
+            MediaUploadService::class
+        );
+
+        $this->app->singleton(
+            MediaService::class
+        );
     }
 
     /**
@@ -32,33 +49,10 @@ class MediaServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerMigrations();
-        $this->registerRoutes();
         $this->registerViews();
-        $this->registerTranslations();
-        $this->registerPublishables();
-    }
-
-    /**
-     * Register package migrations.
-     */
-    protected function registerMigrations(): void
-    {
-        $this->loadMigrationsFrom(
-            __DIR__ . '/../Database/Migrations'
-        );
-    }
-
-    /**
-     * Register package routes.
-     */
-    protected function registerRoutes(): void
-    {
-        if (config('media.routes.enabled', true)) {
-            $this->loadRoutesFrom(
-                __DIR__ . '/../Routes/web.php'
-            );
-        }
+        $this->registerBladeComponents();
+        $this->registerMigrations();
+        $this->registerPublishing();
     }
 
     /**
@@ -67,43 +61,49 @@ class MediaServiceProvider extends ServiceProvider
     protected function registerViews(): void
     {
         $this->loadViewsFrom(
-            __DIR__ . '/../Views',
+            __DIR__ . '/../../resources/views',
             'media'
         );
     }
 
     /**
-     * Register package translations.
+     * Register package Blade components.
      */
-    protected function registerTranslations(): void
+    protected function registerBladeComponents(): void
     {
-        $this->loadTranslationsFrom(
-            __DIR__ . '/../Lang',
+        Blade::componentNamespace(
+            'Pagelyne\\Media\\View\\Components',
             'media'
         );
     }
 
     /**
-     * Register package publishable resources.
+     * Register package migrations.
      */
-    protected function registerPublishables(): void
+    protected function registerMigrations(): void
+    {
+        $this->loadMigrationsFrom(
+            __DIR__ . '/../database/migrations'
+        );
+    }
+
+    /**
+     * Register package publishing.
+     */
+    protected function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../Config/media.php' => config_path('media.php'),
+                __DIR__ . '/../../config/media.php' => config_path('media.php'),
             ], 'media-config');
 
             $this->publishes([
-                __DIR__ . '/../Database/Migrations' => database_path('migrations'),
+                __DIR__ . '/../../database/migrations' => database_path('migrations'),
             ], 'media-migrations');
 
             $this->publishes([
-                __DIR__ . '/../Views' => resource_path('views/vendor/media'),
+                __DIR__ . '/../../resources/views' => resource_path('views/vendor/media'),
             ], 'media-views');
-
-            $this->publishes([
-                __DIR__ . '/../Lang' => lang_path('vendor/media'),
-            ], 'media-lang');
         }
     }
 }
